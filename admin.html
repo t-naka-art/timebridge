@@ -321,7 +321,13 @@ function defaultMembers(){return[
   {id:2,name:"Priya",initials:"Pr",tz:"🇮🇳 IST",role:"スタッフ",color:"#E1F5EE",textColor:"#085041",hourlyRate:1500,salaryType:"hourly",monthlySalary:0},
 ];}
 function saveMembers(d){localStorage.setItem('tb_members',JSON.stringify(d));}
-function loadMembers(){return getMembers()||defaultMembers();}
+function loadMembers(){
+  var stored = getMembers();
+  if(stored && stored.length > 0) return stored;
+  var def = defaultMembers();
+  try{ localStorage.setItem('tb_members', JSON.stringify(def)); }catch{}
+  return def;
+}
 function getShiftsFor(mid){try{return JSON.parse(localStorage.getItem('tb_shifts_'+mid)||'[]');}catch{return[];}}
 function getAdminShifts(){try{return JSON.parse(localStorage.getItem('tb_admin_shifts')||'[]');}catch{return[];}}
 function saveAdminShifts(d){localStorage.setItem('tb_admin_shifts',JSON.stringify(d));}
@@ -634,7 +640,14 @@ function updateReq(mid,id,status){
 
 // ====== メンバー管理 ======
 function renderMemberTable(){
-  const MEMBERS=loadMembers();
+  // localStorageになければデフォルトを保存してから使う
+  var stored = null;
+  try{ stored = JSON.parse(localStorage.getItem('tb_members')||'null'); }catch{}
+  if(!stored || !Array.isArray(stored) || stored.length===0){
+    stored = defaultMembers();
+    localStorage.setItem('tb_members', JSON.stringify(stored));
+  }
+  const MEMBERS = stored;
   document.getElementById('member-count').textContent=MEMBERS.length;
   document.getElementById('member-tbody').innerHTML=MEMBERS.map(m=>`
     <tr><td><div style="display:flex;align-items:center;gap:8px">${avEl(m)}<div><div style="font-size:12px;font-weight:500">${m.name}</div></div></div></td>
@@ -741,6 +754,8 @@ function showTab(id,el){
   if(el)el.classList.add('active');
   if(id==='attendance') initAttendanceTab();
   if(id==='shifts'){ renderAllShifts(); renderShifts(); }
+  if(id==='members') renderMemberTable();
+  if(id==='payroll') renderPayroll();
 }
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 window.onclick=e=>{if(e.target.classList.contains('modal-overlay'))e.target.classList.remove('open');};
