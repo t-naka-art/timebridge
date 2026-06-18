@@ -179,40 +179,26 @@ a.back{font-size:12px;color:var(--purple);text-decoration:none;display:inline-bl
 
 <script>
 // ===== データ取得 =====
-function defaultMembers(){
-  return[
+// メンバーデータ（管理者で変更した場合はここも更新してください）
+var MEMBER_DATA = (function(){
+  // まずlocalStorageを試みる
+  try{
+    var raw = localStorage.getItem('tb_members');
+    if(raw && raw !== 'null'){
+      var parsed = JSON.parse(raw);
+      if(Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  }catch(e){}
+  // なければデフォルト
+  return [
     {id:1,name:'我那覇',initials:'我',tz:'🇯🇵 JST',role:'スタッフ',color:'#EEEDFE',textColor:'#3C3489',hourlyRate:1500,salaryType:'hourly'},
     {id:2,name:'Priya',initials:'Pr',tz:'🇮🇳 IST',role:'スタッフ',color:'#E1F5EE',textColor:'#085041',hourlyRate:1500,salaryType:'hourly'},
   ];
-}
-function getMembers(){
-  try{
-    var raw = localStorage.getItem('tb_members');
-    if(!raw) return null;
-    var parsed = JSON.parse(raw);
-    if(!parsed || !Array.isArray(parsed) || parsed.length===0) return null;
-    return parsed;
-  }catch(e){ return null; }
-}
-function loadMembersForDisplay(){
-  var stored = getMembers();
-  if(stored && stored.length > 0) return stored;
-  // localStorageにない場合はデフォルトをセットして返す
-  var def = defaultMembers();
-  try{
-    localStorage.setItem('tb_members', JSON.stringify(def));
-  }catch(e){}
-  return def;
-}
-// ページ読み込み時に即座にlocalStorageへ書き込む
-(function(){
-  try{
-    var raw = localStorage.getItem('tb_members');
-    if(!raw || raw==='null' || raw==='[]'){
-      localStorage.setItem('tb_members', JSON.stringify(defaultMembers()));
-    }
-  }catch(e){}
 })();
+
+function defaultMembers(){ return MEMBER_DATA; }
+function getMembers(){ return MEMBER_DATA; }
+function loadMembersForDisplay(){ return MEMBER_DATA; }
 function getStore(id){ try{ return JSON.parse(localStorage.getItem('tb_clk_'+id)||'{}'); }catch{ return {}; } }
 function saveStore(id,d){ try{ localStorage.setItem('tb_clk_'+id,JSON.stringify(d)); }catch{} }
 function getShifts(id){ try{ return JSON.parse(localStorage.getItem('tb_shifts_'+id)||'[]'); }catch{ return []; } }
@@ -229,7 +215,7 @@ var st = { clocked:false, onBreak:false, clockInTime:null, clockOutTime:null, br
 
 // ===== メンバー選択グリッド =====
 function renderMemberGrid(){
-  var MEMBERS = loadMembersForDisplay();
+  var MEMBERS = MEMBER_DATA;
   var grid = document.getElementById('member-grid');
   grid.innerHTML = '';
   if(MEMBERS.length === 0){
@@ -658,6 +644,8 @@ document.getElementById('btn-clear-shift').onclick=function(){
 };
 
 // ===== 初期化（最後に実行）=====
+// デバッグ: コンソールにメンバー数を出力
+console.log('TimeBridge member.html loaded. Members:', MEMBER_DATA.length, MEMBER_DATA.map(function(m){return m.name;}));
 renderMemberGrid();
 </script>
 </body>
